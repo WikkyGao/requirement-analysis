@@ -1,0 +1,11 @@
+timestamp	commit	skill	old_score	new_score	status	dimension	note	eval_mode
+2026-06-25T14:30	baseline	requirement-analysis	-	67.0	baseline	-	初始评估	dry_run
+2026-06-25T14:35	c679a63	requirement-analysis	67.0	78.8	keep	资源整合度	添加样例文件+改进frontmatter	dry_run
+2026-06-25T14:40	9ceb429	requirement-analysis	78.8	81.7	keep	检查点设计	添加阶段4.5整合摘要检查点	dry_run
+2026-06-25T14:45	836e210	requirement-analysis	81.7	82.7	keep	边界条件覆盖	补充5个边界场景	dry_run
+2026-06-25T15:00	4e99d7f	requirement-analysis	82.7	85.0	keep	指令具体性	添加对话式需求提取技巧	dry_run
+2026-06-25T15:10	b64bbc3	requirement-analysis	85.0	85.0	keep	指令具体性	优化功能清单模板(原子功能)	dry_run
+2026-06-25T15:20	f59a520	requirement-analysis	85.0	87.5	keep	实测表现	添加执行流程速查	dry_run
+2026-06-25T15:25	5f3846f	requirement-analysis	87.5	88.5	keep	边界条件覆盖	补充对话式提取边界场景	dry_run
+2026-06-25T15:30	3e118f1	requirement-analysis	88.5	89.2	keep	检查点设计	添加阶段1.5完成确认	dry_run
+2026-06-25T15:35	2e008c8	requirement-analysis	89.2	90.0	keep	Frontmatter质量	补充使用场景描述	dry_run

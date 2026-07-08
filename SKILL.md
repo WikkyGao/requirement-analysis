@@ -37,7 +37,7 @@ description: "多格式需求文档分析与整合。自动解析 Markdown、Exc
 
 ### 标准模式（默认）
 
-完整的 7 阶段流程，含需求澄清交互。适用于首次需求分析、文档来源复杂的场景。
+完整的 8 阶段流程（含可选推送），含需求澄清交互。适用于首次需求分析、文档来源复杂的场景。
 
 ### 快速模式
 
@@ -556,6 +556,355 @@ description: "多格式需求文档分析与整合。自动解析 Markdown、Exc
 
 > 📎 完整的输出格式和填充示例见 `references/PRD-template.md`
 
+---
+
+### 阶段 8: PRD 推送（可选）
+
+> 生成 PRD 后，询问用户是否将 PRD 推送到指定目标路径。如用户选择推送，按目标类型执行对应操作；如跳过则流程结束。
+
+**默认行为**: 阶段 7 生成 PRD 后，自动询问用户是否需要推送。
+
+#### 8.1 推送目标选择
+
+向用户展示可选的目标类型：
+
+```
+📤 PRD 已生成：工作区根目录 PRD.md
+
+是否需要推送到以下目标？
+  A. 🌐 飞书文档 (Feishu/Lark)
+     A1. CLI 模式 (推荐 — 命令行工具)
+     A2. Open API 模式 (REST API)
+     A3. Webhook 模式 (群机器人消息)
+  B. 📦 Git 仓库 (提交并推送)
+  C. 🗄️ FTP/SFTP 服务器
+  D. 📁 本地路径 (复制到指定目录)
+  E. 🗒️ Obsidian 仓库 (选择文件夹)
+  F. 📋 剪贴板 (复制内容)
+  G. ⏭️ 跳过，不推送
+```
+
+用户选择后，收集目标配置信息并执行推送。一次可选择多个目标。
+
+#### 8.2 推送至飞书文档
+
+飞书推送支持 **三种接入模式**，按优先级推荐排列：
+
+| 模式 | 适用场景 | 依赖 | 认证方式 |
+|---|---|---|---|
+| **CLI 模式** | 已安装飞书 CLI 工具的环境 | `lark` / `by-cli` 命令行工具 | OAuth 登录 / Token |
+| **Open API 模式** | 需要精确控制文档内容 | `curl` 或 `requests` | App ID + App Secret |
+| **Webhook 模式** | 简单通知场景，无需文档管理 | `curl` | Webhook URL |
+
+##### 8.2.1 CLI 模式（推荐）
+
+使用飞书官方命令行工具将 PRD 内容直接写入飞书文档。
+
+**依赖**: 需要安装飞书 CLI 工具（`lark` / `by-cli` / `feishu`，按飞书最新 CLI 名称调用）。
+
+**配置信息**:
+- **认证**: 首次使用需执行 `lark login` 完成 OAuth 授权，后续自动复用凭证
+- **文档标题**: 默认 `PRD - {version} - {date}`，可自定义
+- **文档空间**: 可选个人空间或指定知识库（`lark doc create --space xxx`）
+
+**实现指引**:
+
+```
+CLI 模式:
+  # 前置：确保已登录
+  lark login
+
+  # 方式 1 — 从文件创建新文档
+  PRD.md 内容写入飞书文档：
+    lark doc create --title "PRD - v1.0.0 - 2026-07-07" --file PRD.md
+
+  # 方式 2 — 更新已有文档（需文档 token）
+  lark doc update <doc_token> --file PRD.md
+
+  # 方式 3 — 上传至指定知识库
+  lark doc create --space <space_id> --title "PRD v1.0.0" --file PRD.md
+```
+
+**输出提示**:
+```
+✅ 已通过 CLI 推送至飞书文档
+   文档链接: https://xxx.feishu.cn/docx/<doc_token>
+```
+
+---
+
+##### 8.2.2 Open API 模式
+
+直接调用飞书开放平台 REST API，适合需要精确控制文档内容结构和格式的场景。
+
+**依赖**: `curl` 或 `requests` / `httpx` Python 库；飞书开放平台应用凭证。
+
+**配置信息**:
+- `FEISHU_APP_ID` — 飞书开放平台应用的 App ID（环境变量或用户提供）
+- `FEISHU_APP_SECRET` — 飞书开放平台应用的 App Secret（环境变量或用户提供）
+- `DOC_TOKEN`（可选）— 已有文档的 token，不传则创建新文档
+- `FOLDER_TOKEN`（可选）— 指定文档所在文件夹
+
+**实现指引**:
+
+```
+Open API 模式:
+  1. 获取 tenant_access_token:
+     POST https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal
+     Body: {"app_id": "$FEISHU_APP_ID", "app_secret": "$FEISHU_APP_SECRET"}
+
+  2. 创建文档（若无 DOC_TOKEN）:
+     POST https://open.feishu.cn/open-apis/docx/v1/documents
+     Header: Authorization: Bearer <tenant_access_token>
+     Body: {"title": "PRD - v1.0.0 - 2026-07-07"}
+
+  3. 写入内容:
+     将 Markdown 转换为飞书文档 Block 格式，逐块写入
+     POST https://open.feishu.cn/open-apis/docx/v1/documents/<doc_token>/blocks/<block_id>/children
+     Header: Authorization: Bearer <tenant_access_token>
+
+     **Markdown → Block 转换参考**:
+     - `# 标题` → type: heading1
+     - `## 标题` → type: heading2
+     - `- 列表项` → type: bullet
+     - `1. 列表项` → type: ordered
+     - `| 表格 |` → type: table
+     - ``` 代码块 ``` → type: code
+     - 普通段落 → type: text
+```
+
+**输出提示**:
+```
+✅ 已通过 Open API 推送至飞书文档
+   文档链接: https://xxx.feishu.cn/docx/<doc_token>
+```
+
+---
+
+##### 8.2.3 Webhook 模式
+
+通过飞书机器人 Webhook 将 PRD 内容作为消息发送到指定群聊，适用于快速通知场景。
+
+**依赖**: `curl`；飞书群机器人 Webhook URL。
+
+**配置信息**:
+- **Webhook URL**: 飞书群机器人 Webhook 地址（如 `https://open.feishu.cn/open-apis/bot/v2/hook/xxx`）
+- **消息格式**: 支持文本、Markdown、富文本卡片
+- **消息标题**: 默认 `📄 PRD 更新 - v{version}`
+
+**实现指引**:
+
+```
+Webhook 模式:
+
+  方式 1 — Markdown 消息（推荐，长度限制 50KB）:
+    POST <webhook_url>
+    Content-Type: application/json
+    Body:
+    {
+      "msg_type": "interactive",
+      "card": {
+        "header": {
+          "title": {"tag": "plain_text", "content": "📄 PRD 更新 - v1.0.0"},
+          "template": "blue"
+        },
+        "elements": [
+          {
+            "tag": "markdown",
+            "content": "<PRD.md 核心内容，支持 Markdown 格式>"
+          },
+          {
+            "tag": "hr"
+          },
+          {
+            "tag": "note",
+            "elements": [
+              {"tag": "plain_text", "content": "由需求分析技能自动推送"}
+            ]
+          }
+        ]
+      }
+    }
+
+  方式 2 — 纯文本消息（内容较小时使用）:
+    POST <webhook_url>
+    Body: {"msg_type": "text", "content": {"text": "📄 PRD 更新 v1.0.0\n<PRD 摘要前 200 字>"}}
+
+  方式 3 — 富文本卡片（结构布局更灵活）:
+    POST <webhook_url>
+    Body: {"msg_type": "interactive", "card": { ... }}
+    # 卡片支持分栏、按钮、图片等丰富布局
+
+  备注:
+  - Markdown 消息超出 50KB 时自动截断，末尾追加 "...（完整内容见工作区 PRD.md）"
+  - Webhook 消息不可编辑，如需更新 PRD 请重新发送
+  - 建议搭配 8.2.1 CLI 模式或 8.2.2 Open API 模式同步创建可编辑文档
+```
+
+#### 8.3 推送至 Git 仓库
+
+**依赖**: 需要 `git` 命令可用，用户提供目标仓库地址（或使用当前仓库远程地址）。
+
+**配置信息**:
+- **仓库地址**: 用户指定 Git 远程仓库 URL（如 `git@github.com:org/repo.git`）
+- **分支**: 用户指定目标分支（默认 `main` 或 `master`）
+- **提交信息**: 自动生成（如 `docs: 更新 PRD - v1.0.0`）或用户自定义
+- **认证方式**: SSH Key（默认自动使用当前环境）/ HTTPS + Token（用户提供访问令牌）
+
+**执行步骤**:
+
+```
+1. 检查当前目录是否已是 Git 仓库
+   - 是 → 使用当前仓库，add PRD.md，commit，push 到指定远程仓库和分支
+   - 否 → 初始化新仓库，add PRD.md，commit，添加 remote，push
+2. 提交信息模板: "docs: update PRD - {version}"（从 PRD 头部提取版本号）
+3. 如已有同名文件冲突，提示用户选择：覆盖 / 合并 / 取消
+```
+
+**输出提示**:
+```
+✅ 已推送 PRD 至 Git 仓库
+   仓库: git@github.com:org/repo.git
+   分支: main
+   提交: a1b2c3d docs: 更新 PRD - v1.0.0
+```
+
+#### 8.4 推送至 FTP/SFTP 服务器
+
+**依赖**: 需要 `ftplib` / `paramiko` (SFTP) Python 库（可用 `python3 -c "import ftplib; ..."` 执行）。
+
+**配置信息**:
+- **主机地址** (host): 服务器 IP 或域名
+- **端口**: FTP 默认 21，SFTP 默认 22
+- **用户名 / 密码**: 用户提供（或从环境变量读取 `FTP_USER` / `FTP_PASS`）
+- **远程路径**: 文件存放的目录路径（如 `/docs/prd/`）
+- **协议选择**: FTP（明文）/ FTPS（隐式/显式 TLS）/ SFTP（SSH）
+
+**执行步骤**:
+
+```
+1. 根据协议连接服务器
+2. 切换到远程路径（目录不存在时尝试创建）
+3. 上传 PRD.md（文件名为 PRD.md 或 PRD_{版本号}_{日期}.md）
+4. 关闭连接
+```
+
+**输出提示**:
+```
+✅ 已推送 PRD 至 FTP 服务器
+   地址: ftp.example.com:21
+   路径: /docs/prd/PRD_v1.0.0_2026-07-07.md
+```
+
+#### 8.5 推送至本地路径
+
+**配置信息**:
+- **目标目录**: 用户输入本地绝对路径或相对路径
+
+**执行步骤**:
+
+```
+1. 检查目标目录是否存在，不存在则创建
+2. 复制 PRD.md 到目标目录（可自动重命名附带时间戳，如 PRD_v1.0.0_2026-07-07.md）
+3. 显示目标文件路径
+```
+
+**输出提示**:
+```
+✅ 已复制 PRD 到本地路径
+   路径: /Users/xxx/Documents/PRD/PRD_v1.0.0_2026-07-07.md
+```
+
+#### 8.6 推送至 Obsidian 仓库
+
+将 PRD 复制到 Obsidian 仓库的指定文件夹中，并自动添加 Obsidian 兼容的 frontmatter（标签、别名），方便在 Obsidian 中检索和关联。
+
+**依赖**: 无额外依赖（纯文件操作）。
+
+**配置信息**:
+- **Obsidian 仓库路径**: 用户指定 Obsidian 仓库的根目录（如 `/Users/xxx/Documents/Obsidian`）
+- **目标文件夹**: 用户从仓库内选择文件夹，支持两种方式：
+  - 直接输入路径（如 `PRD/`、`Projects/需求文档/`）
+  - 扫描仓库结构，展示文件夹树供选择
+- **文件名**: 默认 `PRD - {version} - {date}.md`，可自定义
+- **标签**: 自动添加 frontmatter 标签（如 `prd`, `需求分析`, `{module_names}`）
+
+**实现指引**:
+
+```
+1. 询问用户 Obsidian 仓库路径
+   - 如不明确，提示常见位置：~/Documents/Obsidian、~/Obsidian、~/iCloud/Obsidian
+
+2. 扫描目标文件夹结构，展示给用户选择：
+   可用命令: find "$VAULT" -type d -not -path '*/\.*' | head -50
+
+   展示示例:
+   📂 Obsidian 仓库: /Users/xxx/Documents/Obsidian
+   请选择目标文件夹（输入序号或路径）:
+     1. /
+     2. Projects/
+     3. Projects/PRD/
+     4. 归档/
+     5. 日记/
+     请输入数字或直接输入文件夹路径:
+
+3. 复制 PRD.md 到目标文件夹，文件重命名为 "PRD - v1.0.0 - 2026-07-07.md"
+
+4. （可选）在文件头部插入或追加 Obsidian 兼容 frontmatter:
+   ---
+   tags: [prd, 需求分析, <模块名>]
+   aliases: ["PRD v1.0.0", "<项目名> PRD"]
+   source: workflow/requirement-analysis
+   date: 2026-07-07
+   ---
+
+5. 如目标文件已存在，提示用户选择：覆盖 / 保留两者（自动加后缀） / 取消
+```
+
+**输出提示**:
+```
+✅ 已推送 PRD 至 Obsidian 仓库
+   仓库: /Users/xxx/Documents/Obsidian
+   路径: Projects/PRD/PRD - v1.0.0 - 2026-07-07.md
+```
+
+---
+
+#### 8.7 推送至剪贴板
+
+**依赖**: 无需额外依赖，使用系统命令：
+
+- macOS: `pbcopy < PRD.md`
+- Linux: `xclip -selection clipboard < PRD.md`
+- Windows: `clip < PRD.md`
+
+**执行步骤**:
+
+```
+1. 读取 PRD.md 内容
+2. 根据操作系统选择对应命令写入剪贴板
+3. 提示已复制，询问是否同时复制为纯文本（去除 Markdown 标记）或保留格式
+```
+
+**输出提示**:
+```
+✅ 已复制 PRD 内容到剪贴板（Markdown 格式保留）
+    提示: 可直接粘贴到飞书/语雀/Notion 等编辑器
+```
+
+#### 8.8 多重推送
+
+用户选择多个目标时，依次执行推送，汇总最终结果：
+
+```
+📤 推送结果汇总:
+  ✅ 飞书文档: https://xxx.feishu.cn/docx/xxx
+  ✅ Git 仓库: main@a1b2c3d
+  ❌ FTP 服务器: 连接超时（请检查服务器地址和防火墙）
+```
+
+推送失败不影响已成功的推送，错误信息单独列出。
+
 ### 执行流程速查
 
 ```
@@ -585,6 +934,8 @@ description: "多格式需求文档分析与整合。自动解析 Markdown、Exc
 阶段 6  最终确认 ── 前置检查（🔴已解决）→ 确认生成
   │
 阶段 7  生成 PRD ── 输出到工作区根目录 PRD.md
+  │
+阶段 8  PRD 推送（可选）── 询问推送目标 → 飞书/Git/FTP/本地/Obsidian/剪贴板
 ```
 
 **跳过规则**:
@@ -592,6 +943,7 @@ description: "多格式需求文档分析与整合。自动解析 Markdown、Exc
 - 快速模式 → 阶段 5 简化为批量确认
 - 非增量模式 → 跳过阶段 6 的变更确认
 - 所有 🔴 问题已清零 → 阶段 5 可提前结束
+- 用户选择不推送 → 跳过阶段 8
 
 ---
 
@@ -625,6 +977,13 @@ description: "多格式需求文档分析与整合。自动解析 Markdown、Exc
 | 大文件（>5MB）    | 提示文件较大，询问是否跳过或继续处理                                            |
 | 多文档同优先级     | 按文件名字母序排列，冲突时标注所有来源供用户选择                                     |
 | 阶段 4.5 用户暂停   | 保存当前整合结果，下次触发时从阶段 4.5 恢复                                        |
+| 飞书 API 调用失败   | 显示具体错误（token 过期/权限不足/限流），询问用户重试或选择其他推送方式                        |
+| Git 推送认证失败    | 提示检查 SSH Key 或 Token 权限，询问用户换用 HTTPS + Token 或跳过                        |
+| FTP/SFTP 连接失败   | 显示错误（连接超时/认证失败/目录不存在），询问用户重试或跳过                                |
+| 推送目标配置缺失    | 提示缺少必填项（如未提供 Git 仓库地址），引导用户补全或选择其他目标                          |
+| 剪贴板命令不可用    | 提示当前系统无对应命令（如 Linux 缺少 xclip），建议安装或改用推送至本地路径                    |
+| Obsidian 仓库路径不存在 | 提示: `⚠️ 指定路径不是 Obsidian 仓库（未找到 .obsidian 目录）`，询问用户确认仍使用该路径或重新输入 |
+| Obsidian 目标文件夹不存在 | 询问用户是否创建该文件夹，创建成功后继续推送                                               |
 
 ---
 
@@ -634,3 +993,7 @@ description: "多格式需求文档分析与整合。自动解析 Markdown、Exc
 2. 所有冲突需要用户最终确认，技能不自动解决
 3. 🔴 严重矛盾解决前不得生成 PRD
 4. 增量模式依赖现有 PRD.md 的格式一致性，手动修改可能导致解析偏差
+5. **阶段 8（推送）仅在用户确认推送后执行**，不干扰核心流程
+6. 飞书推送依赖 API token，建议用户提前获取 `FEISHU_APP_ID` 和 `FEISHU_APP_SECRET` 或 Webhook URL
+7. Git 推送使用当前环境认证配置（SSH Key 优先），HTTPS 推送需用户提供 Token
+8. Obsidian 推送依赖本地仓库路径，建议用户提前确认 Obsidian 仓库位置；如需自动添加 frontmatter，PRD 内容将被轻微修改

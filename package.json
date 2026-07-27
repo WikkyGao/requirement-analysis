@@ -1,0 +1,29 @@
+{
+  "name": "requirement-analysis",
+  "displayName": "需求分析技能",
+  "version": "1.0.0",
+  "description": "多格式需求文档分析与整合，自动生成标准化 PRD.md",
+  "description_en": "Multi-format requirement document analysis and integration, auto-generate standardized PRD.md",
+  "author": "wikky",
+  "license": "MIT",
+  "type": "module",
+  "private": true,
+  "keywords": ["atomcode", "skill", "requirement-analysis", "prd", "product-management"],
+  "engines": {
+    "atomcode": ">=1.0.0"
+  },
+  "scripts": {
+    "package": "bash package.sh",
+    "test": "echo \"No npm tests; see python-docx/openpyxl for optional dependencies\" && exit 0"
+  },
+  "dependencies": {},
+  "optionalDependencies": {
+    "xmind": "备选：XMind 思维导图解析（当前使用 XML 解析方式）"
+  },
+  "atomcode": {
+    "skill": true,
+    "main": "SKILL.md",
+    "triggers": ["需求分析", "分析需求", "整理需求", "PRD", "需求文档", "需求梳理", "梳理需求"],
+    "formats": [".md", ".docx", ".xlsx", ".xmind", ".mm", ".mmap"]
+  }
+}

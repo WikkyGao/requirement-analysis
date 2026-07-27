@@ -1,0 +1,58 @@
+{
+  "name": "requirement-analysis",
+  "display_name": "需求分析技能",
+  "version": "1.0.0",
+  "description": "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的 PRD.md 文档。",
+  "description_en": "Multi-format requirement document analysis and integration. Automatically parse Markdown, Excel, Word, and mind map files, intelligently deduplicate and supplement requirement info, and generate standardized PRD.md documents.",
+  "author": {
+    "name": "wikky",
+    "email": "",
+    "url": ""
+  },
+  "license": "MIT",
+  "homepage": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "tags": ["requirement-analysis", "prd", "product-management", "文档分析", "需求分析", "产品需求文档"],
+  "triggers": ["需求分析", "分析需求", "整理需求", "PRD", "需求文档", "需求梳理", "梳理需求"],
+  "platform": "atomcode",
+  "min_agent_version": "1.0.0",
+  "work_modes": ["standard", "quick", "incremental"],
+  "supported_formats": [
+    {"format": "Markdown", "extensions": [".md", ".markdown"], "priority": 1},
+    {"format": "Word", "extensions": [".docx"], "priority": 2},
+    {"format": "Excel", "extensions": [".xlsx", ".xls"], "priority": 3},
+    {"format": "MindMap", "extensions": [".xmind", ".mm", ".mmap"], "priority": 4},
+    {"format": "NaturalLanguage", "priority": 0}
+  ],
+  "output": {
+    "file": "PRD.md",
+    "format": "markdown",
+    "sections": ["需求概述", "功能清单", "页面结构", "数据字段", "附录"]
+  },
+  "dependencies": {
+    "optional": {
+      "python-docx": "Word (.docx) 解析增强",
+      "openpyxl": "Excel (.xlsx) 解析增强",
+      "in2csv": "备选 Excel 解析"
+    }
+  },
+  "features": [
+    "语义去重",
+    "冲突检测",
+    "INVEST 需求质量评估",
+    "来源追溯",
+    "增量更新",
+    "快速模式",
+    "飞书/Git/FTP/Obsidian/剪贴板多目标推送"
+  ],
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-07-27",
+      "changes": ["初始版本", "支持标准/快速/增量三种模式", "支持 Markdown/Word/Excel/思维导图解析", "支持多目标 PRD 推送"]
+    }
+  ]
+}

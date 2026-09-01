@@ -50,9 +50,14 @@
   ],
   "changelog": [
     {
-      "version": "1.0.0",
+  "version": "1.1.0",
       "date": "2026-07-27",
       "changes": ["初始版本", "支持标准/快速/增量三种模式", "支持 Markdown/Word/Excel/思维导图解析", "支持多目标 PRD 推送"]
+    },
+    {
+      "version": "1.1.0",
+      "date": "2026-09-01",
+      "changes": ["新增可选 pencil-designer 可视化原型流程（T8）", "新增 pencil-designer 协作约束"]
     }
   ]
 }

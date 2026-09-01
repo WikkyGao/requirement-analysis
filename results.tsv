@@ -9,3 +9,4 @@ timestamp	commit	skill	old_score	new_score	status	dimension	note	eval_mode
 2026-06-25T15:25	5f3846f	requirement-analysis	87.5	88.5	keep	边界条件覆盖	补充对话式提取边界场景	dry_run
 2026-06-25T15:30	3e118f1	requirement-analysis	88.5	89.2	keep	检查点设计	添加阶段1.5完成确认	dry_run
 2026-06-25T15:35	2e008c8	requirement-analysis	89.2	90.0	keep	Frontmatter质量	补充使用场景描述	dry_run
+2026-09-01T09:56	cd76e35	requirement-analysis	90.0	93.0	keep	整体架构/指令具体性/资源整合度	增加pencil-designer可选流程(T8)	dry_run

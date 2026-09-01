@@ -36,7 +36,10 @@ graph TD
     T5 -->|🔴问题未清零| T5
     T5 -->|🔴全部清零| T6["T6: 最终确认"]
     T6 -->|🔴 CHECKPOINT| T7["T7: 生成 PRD.md"]
-    T7 --> END([完成])
+    T7 -->|🔴 CHECKPOINT| T8{"需要可视化原型?"}
+    T8 -->|是| T8_Execute["T8: pencil-designer 原型设计"]
+    T8 -->|否| END([完成])
+    T8_Execute --> END([完成])
 
     subgraph 分工标注
         LLM["[LLM 决策] — 语义理解/交互决策"]
@@ -59,6 +62,7 @@ graph TD
 - 快速模式 → T5 简化为批量确认
 - 非增量模式 → 跳过 T6 的变更差异展示
 - 🔴 问题全部已清零 → T5 可提前结束
+- 用户选择不生成原型 → 跳过 T8
 
 </workflow>
 
@@ -427,6 +431,114 @@ echo '{
 **PRD 必需章节**: 需求概述 → 功能清单 → 页面结构 → 数据字段 → 附录（变更历史 + 待确认事项 + INVEST 质量评估）
 
 **输出**: 工作区根目录 `PRD.md`
+
+</task>
+
+<task name="可视化原型设计">
+
+### Task 8: 可视化原型设计（可选）
+
+**分工**: [LLM→Script] — LLM 决策是否启动，调用 pencil-designer skill 执行
+
+> **触发条件**: 用户在 PRD 确认后提出可视化原型需求，或 PRD.md 中标记了需要原型设计的模块。
+> **依赖**: 本 Task 依赖 Task 7 输出的 PRD.md。pencil-designer skill 的 Step 1-2 会自动读取 PRD.md。
+
+#### 8.1 是否需要原型设计？
+
+- [ ] Step 1: 展示 PRD.md 摘要，询问用户是否需要生成可视化原型
+
+```
+📊 PRD 已生成，检测到以下模块：
+  - [模块1]: [功能数] 个功能项
+  - [模块2]: [功能数] 个功能项
+  - ...
+
+是否需要基于此 PRD 生成可视化原型？
+1. ✅ 是，使用 pencil-designer 生成原型
+2. 📝 我需要先修改 PRD 再生成
+3. ⏸ 暂不生成，仅输出 PRD.md
+```
+
+- [ ] 🔴 **CHECKPOINT**: 用户选择"否"则跳过本 Task，流程结束
+
+#### 8.2 调用 pencil-designer
+
+用户选择"✅ 是"时，按 pencil-designer skill 流程执行：
+
+- [ ] Step 1: **环境探测** — 运行 pencil-designer 的 §1 环境探测
+
+```bash
+# pen.dev 环境检测
+which pen >/dev/null 2>&1 && pen version 2>/dev/null | tail -1 || echo "pen: 未安装"
+pgrep -f "Pen.app" >/dev/null 2>&1 && echo "Pen.app: 运行中" || echo "Pen.app: 未运行"
+```
+
+- [ ] Step 2: **选择后端** — 用 AskUserQuestion 让用户选择设计工具后端
+  - `pen.dev（已就绪，推荐）` — 本地生成，必然可用
+  - `墨刀（未配置，选此项需先授权）` — 需墨刀 MCP 已连接
+
+- [ ] Step 3: **PRD 读取** — pencil-designer 自动读取当前及上级目录的 PRD.md
+  - 提取项目概述、功能模块、数据字段、业务流程
+  - 若 PRD.md 缺失或格式异常，回退到人工描述
+
+- [ ] Step 4: **设计规范** — 检查是否有 `UI Design.pen`，无则创建
+  - 沉淀色彩、字体、组件风格
+
+- [ ] Step 5: **CLI 出图** — 调用 pen.dev CLI Agent 模式生成原型
+
+```bash
+pen --out design.pen --prompt "基于 PRD.md 生成页面原型，包含以下模块: [模块列表]" --export design.png --export-scale 2
+```
+
+> ⚠️ 透传用户原话，不要自行扩写 prompt。生成时间: 简单 1-2 分钟、复杂 3-5+ 分钟。超时至少设 600000ms。
+
+- [ ] Step 6: **MCP 精细控制**（可选）— 若 CLI 结果不理想，使用 MCP Interactive 模式微调
+
+```bash
+pen interactive -i design.pen -o design-v2.pen
+```
+
+- [ ] Step 7: **Context 补录** — 为交互控件补录 context 信息
+
+```js
+Get(pageId, n => /^btn-|^input-|^select-/.test(n.name) && !n.context && Update(n.id, {context:"..."}))
+```
+
+- [ ] Step 8: **导出可交互原型** — 生成三栏可交互 HTML 原型
+
+```bash
+# 使用 execute 的 Export 导出
+# 或通过 MCP Interactive 模式生成 {原文件名}-prototype.html
+```
+
+**输出**: `design.pen` 原型文件 + `{原文件名}-prototype.html` 可交互原型
+
+#### 8.3 异常处理
+
+| 场景 | 处理方式 |
+| --- | --- |
+| pen.dev 未安装 | 引导 `npm install -g @pen.dev/cli`，Node >= 18 |
+| PRD.md 缺失或格式异常 | 回退到人工描述模式，让用户补充需求说明 |
+| 用户拒绝授权 | 跳过原型生成，流程结束 |
+| 生成超时（>10分钟）| 提示用户，可降低复杂度重试或保存中间状态 |
+| 后端不可用 | 回退到 pen.dev 本地后端（必然可用） |
+
+#### 8.4 完成检查点
+
+```
+✅ 原型生成完成！
+  原型文件: design.pen
+  可交互原型: design-prototype.html
+
+A. ✅ 确认完成，流程结束
+B. 📝 需要修改设计（将反馈传入 pencil-designer 迭代）
+C. ⏸ 暂停，保存进度
+```
+
+**执行规则**:
+- 用户选择 A → 流程结束
+- 用户选择 B → 将修改意见传入 pencil-designer，迭代修改 design.pen
+- 用户选择 C → 暂停，保存进度
 
 </task>
 

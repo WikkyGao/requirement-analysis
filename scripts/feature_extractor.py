@@ -5,8 +5,10 @@ feature_extractor.py - 从解析后的中间 JSON 提取结构化功能项
 输出 stdout JSON: {"status": "ok", "features": [...]} 或 {"status": "error", ...}
 """
 import json
+import re
 import sys
 import uuid
+from typing import Optional
 
 
 def validate_input(data: dict) -> None:
@@ -141,7 +143,7 @@ def _infer_priority(details: list) -> str:
     return 'medium'
 
 
-def _find_column(headers: list, candidates: list) -> int | None:
+def _find_column(headers: list, candidates: list) -> Optional[int]:
     """Find column index by header name matching."""
     for i, h in enumerate(headers):
         h_clean = h.strip().lower()
@@ -215,10 +217,6 @@ def _infer_actions(details: list) -> list:
 
 
 def main():
-    # Import re here to avoid top-level shadowing
-    global re
-    import re
-
     try:
         raw = sys.stdin.read()
         if not raw.strip():

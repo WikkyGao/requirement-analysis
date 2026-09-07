@@ -1,7 +1,7 @@
 {
   "name": "requirement-analysis",
   "display_name": "需求分析技能",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的 PRD.md 文档。",
   "description_en": "Multi-format requirement document analysis and integration. Automatically parse Markdown, Excel, Word, and mind map files, intelligently deduplicate and supplement requirement info, and generate standardized PRD.md documents.",
   "author": {
@@ -49,6 +49,11 @@
     "飞书/Git/FTP/Obsidian/剪贴板多目标推送"
   ],
   "changelog": [
+    {
+  "version": "1.2.0",
+      "date": "2026-09-07",
+      "changes": ["T2 新增大文件分层提取策略（骨架→逐批→合并），避免上下文溢出", "T5 新增 NFR 基线规则默认值，自动填平非功能坑", "T5 澄清改为按用户旅程分批提问", "T5 新增 MoSCoW 优先级锚定，聚焦核心主干", "T5 冲突改为冲突影响分析表可视化", "T1.5 新增需求/功能/方案三层甄别，防止方案绑架需求", "T7 支持用户指定输出子目录并基于目录结构推荐", "T7 支持完整版/业务摘要版两种输出模板", "T7 附录新增需求→功能→方案映射", "T8 简化为仅做简单引导，环境检查移交 pencil-designer"]
+    },
     {
   "version": "1.1.0",
       "date": "2026-07-27",

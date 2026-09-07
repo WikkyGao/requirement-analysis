@@ -85,9 +85,9 @@ def check_mermaid(content: str) -> dict:
 
 def check_scene_recognition(content: str) -> dict:
     # Look for scene recognition table or conditional logic
-    has_table = '| 条件 | 场景 |' in content
+    has_table = '| 条件' in content and '| 场景' in content
     has_sr = '场景识别' in content or 'SR{{' in content
-    return {'scene_recognition': {'passed': has_table and has_sr, 'message': 'Scene recognition found' if has_table else 'Missing scene recognition'}}
+    return {'scene_recognition': {'passed': has_table and has_sr, 'message': 'Scene recognition found' if has_table and has_sr else 'Missing scene recognition'}}
 
 
 def check_no_ref_section(content: str) -> dict:
@@ -105,13 +105,18 @@ def check_forward_slash(content: str) -> dict:
 
 
 def check_body_line_count(content: str) -> dict:
-    """Check body lines <= 500."""
+    """Check body lines <= 500 (body = content after YAML frontmatter)."""
     lines = content.split('\n')
     body_start = 0
-    for i, line in enumerate(lines):
-        if line.strip() == '---':
-            body_start = i + 1
-            break
+    # Find the frontmatter block: first line is '---', closing '---' is the next '---'
+    if lines and lines[0].strip() == '---':
+        for i in range(1, len(lines)):
+            if lines[i].strip() == '---':
+                body_start = i + 1
+                break
+    else:
+        # No frontmatter; count from the start
+        body_start = 0
 
     body_lines = len(lines) - body_start
     return {'body_line_count': {'passed': body_lines <= 500, 'message': f'{body_lines} lines in body' if body_lines <= 500 else f'Body is {body_lines} lines (max 500)'}}

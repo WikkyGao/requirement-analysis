@@ -1,6 +1,8 @@
 # 需求分析技能 (Requirement Analysis Skill)
 
-> **版本**: v1.0.0 | **许可**: MIT
+[![skills.sh](https://skills.sh/b/WikkyGao/requirement-analysis)](https://skills.sh/WikkyGao/requirement-analysis)
+
+> **版本**: v1.2.0 | **许可**: MIT
 
 ## 简介
 
@@ -13,11 +15,14 @@
 ### 安装
 
 ```bash
-# 复制到技能目录
-cp -r requirement-analysis-1.0.0 ~/.claude/skills/
+# 通过 skills.sh 一键安装（推荐，支持 Claude Code / Codex / Cursor / Gemini CLI 等 20+ agent）
+npx skills add WikkyGao/requirement-analysis
+
+# 或手动复制到技能目录
+cp -r requirement-analysis ~/.claude/skills/
 
 # 安装可选依赖（增强文档解析能力）
-cd ~/.claude/skills/requirement-analysis-1.0.0
+cd ~/.claude/skills/requirement-analysis
 pip install python-docx openpyxl    # 增强 Word/Excel 解析
 # 或 npm install                    # 备选依赖
 ```
@@ -97,4 +102,3 @@ requirement-analysis/
 ├── package.json     # npm 依赖（备选）
 └── package.sh       # 打包脚本
 ```
-# requirement-analysis

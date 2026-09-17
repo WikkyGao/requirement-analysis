@@ -2,7 +2,8 @@
 name: requirement-analysis
 slug: pm-requirement-analysis
 displayName: requirement-analysis
-version: 1.2.0
+version: 1.2.1
+summary: 多格式需求文档分析与整合，自动生成标准化 PRD.md，支持分层提取、需求澄清与可视化原型
 license: MIT
 description: "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的 PRD.md 文档。大文件采用分层提取避免上下文溢出；支持用户指定子目录输出；支持完整版/业务摘要版模板。可选集成 pencil-designer 生成可视化原型。适用场景：用户有多个需求来源需要整合、需要从零梳理需求、需要将模糊想法转化为结构化 PRD、需要可视化原型。触发词：需求分析、分析需求、整理需求、PRD、需求文档、需求梳理、梳理需求、可视化原型、页面设计。"
 ---

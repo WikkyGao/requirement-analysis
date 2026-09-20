@@ -2,7 +2,7 @@
 name: requirement-analysis
 slug: pm-requirement-analysis
 displayName: requirement-analysis
-version: 1.2.1
+version: 1.2.2
 summary: 多格式需求文档分析与整合，自动生成标准化 PRD.md，支持分层提取、需求澄清与可视化原型
 license: MIT
 description: "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的 PRD.md 文档。大文件采用分层提取避免上下文溢出；支持用户指定子目录输出；支持完整版/业务摘要版模板。可选集成 pencil-designer 生成可视化原型。适用场景：用户有多个需求来源需要整合、需要从零梳理需求、需要将模糊想法转化为结构化 PRD、需要可视化原型。触发词：需求分析、分析需求、整理需求、PRD、需求文档、需求梳理、梳理需求、可视化原型、页面设计。"
@@ -253,7 +253,10 @@ echo '{"mode":"merge","chunks":[<各批 features>]}' | python scripts/chunked_ex
 | 大文件 >5MB       | 提示用户，询问是否跳过                                  |
 | 无功能项识别到        | 提示用户检查文档格式或补充描述                              |
 
-**输出**: 统一中间格式 JSON 数组 `[{id, name, description, module, priority, fields, actions, source}]`
+**输出**: 统一中间格式 JSON 数组 `[{id, name, description, module, priority, fields, actions, screenshots, related_pages, source}]`
+
+> **截图字段（可选）**: 若用户提供了界面截图/原型图，或在澄清过程中补充了现状截图，为对应功能项附加 `screenshots: [{path, caption, description}]`。`path` 使用相对 PRD 的路径（建议存放在 `screenshots/` 目录），生成 PRD 时在每个功能下渲染为「截图」小节。
+> **相关页面字段（可选）**: 若已有原型页面截图（如 pencil-designer 产出），为对应功能项附加 `related_pages: [{name, path, caption, description}]`（建议存放在 `prototype/` 目录），生成 PRD 时在每个功能下渲染为「相关页面」小节。
 
 - [ ] Step 3: [LLM 决策] **信息补充** — 必需字段缺失时从高优先级文档补充，仍缺失标记"待补充"
 

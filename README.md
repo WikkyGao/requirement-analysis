@@ -2,7 +2,7 @@
 
 [![skills.sh](https://skills.sh/b/WikkyGao/requirement-analysis)](https://skills.sh/WikkyGao/requirement-analysis)
 
-> **版本**: v1.2.0 | **许可**: MIT
+> **版本**: v1.2.2 | **许可**: MIT
 
 ## 简介
 

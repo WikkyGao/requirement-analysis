@@ -1,7 +1,7 @@
 {
   "name": "requirement-analysis",
   "display_name": "需求分析技能",
-  "version": "1.2.0",
+  "version": "1.2.2",
   "description": "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的 PRD.md 文档。",
   "description_en": "Multi-format requirement document analysis and integration. Automatically parse Markdown, Excel, Word, and mind map files, intelligently deduplicate and supplement requirement info, and generate standardized PRD.md documents.",
   "author": {
@@ -49,6 +49,11 @@
     "飞书/Git/FTP/Obsidian/剪贴板多目标推送"
   ],
   "changelog": [
+    {
+  "version": "1.2.2",
+      "date": "2026-09-20",
+      "changes": ["功能项新增可选 screenshots（截图）与 related_pages（相关页面/原型图）字段", "PRD 模板完整版与摘要版均支持渲染「截图」「相关页面」小节", "prd_generator 实现截图/相关页面渲染，输入格式示例补充字段说明"]
+    },
     {
   "version": "1.2.0",
       "date": "2026-09-07",

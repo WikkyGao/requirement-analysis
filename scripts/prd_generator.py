@@ -5,7 +5,9 @@ prd_generator.py - 按标准模板生成 PRD.md
                   "mode": "standard|quick|incremental", "template": "full|summary",
                   "version": "1.0.0", "project_name": "...", "pending_items": [...],
                   "nfr_baseline": [{name, default, trigger}], "need_feature_map": [{need, feature, solution}],
-                  "existing_prd": "..." (incremental mode)}
+                  "existing_prd": "..." (incremental mode)
+                  每个功能项可含 screenshots: [{path, caption, description}] → 渲染为「截图」小节
+                  每个功能项可含 related_pages: [{name, path, caption, description}] → 渲染为「相关页面」小节（原型页面截图）}
 接收命令行参数: --output ./PRD.md, --template full|summary
 输出 stdout JSON: {"status": "ok", "path": "PRD.md"} 或 {"status": "error", ...}
 """
@@ -102,6 +104,36 @@ def render_feature_list(features: list, template: str = 'full') -> str:
             lines.append(f'| 优先级 | {fpriority} |')
             lines.append(f'\n**功能描述**\n')
             lines.append(f'{fdesc if fdesc else "待补充"}\n')
+
+            # 截图（业务上下文，完整版与摘要版均保留）
+            screenshots = feat.get('screenshots', [])
+            if screenshots:
+                lines.append(f'\n**截图**\n')
+                for s in screenshots:
+                    spath = s.get('path', '')
+                    scaption = s.get('caption', '')
+                    sdesc = s.get('description', '')
+                    if spath:
+                        lines.append(f'![{scaption or fname}]({spath})')
+                        if scaption or sdesc:
+                            lines.append(f'> {scaption}{"：" if scaption and sdesc else ""}{sdesc}')
+                        lines.append('')
+
+            # 相关页面（原型/设计稿页面截图，完整版与摘要版均保留）
+            related_pages = feat.get('related_pages', [])
+            if related_pages:
+                lines.append(f'\n**相关页面**\n')
+                for p in related_pages:
+                    pname = p.get('name', '')
+                    ppath = p.get('path', '')
+                    pcaption = p.get('caption', '')
+                    pdesc = p.get('description', '')
+                    lines.append(f'- **{pname}**' if pname else '- **待命名页面**')
+                    if ppath:
+                        lines.append(f'  ![{pcaption or pname}]({ppath})')
+                    if pcaption or pdesc:
+                        lines.append(f'  > {pcaption}{"：" if pcaption and pdesc else ""}{pdesc}')
+                lines.append('')
 
             # 完整版才输出字段/动作/交互等实现细节；摘要版删减这些技术细节
             if template == 'full':

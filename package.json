@@ -1,23 +1,14 @@
 {
   "name": "requirement-analysis",
   "displayName": "需求分析技能",
-  "version": "1.3.0",
-  "description": "多格式需求文档分析与整合，生成 PRD、系统概要说明书、详细说明书、数据库设计说明书",
-  "description_en": "Multi-format requirement analysis generating PRD, system overview, detailed design, and database design documents",
+  "version": "1.2.2",
+  "description": "多格式需求文档分析与整合，自动生成标准化 PRD.md",
+  "description_en": "Multi-format requirement document analysis and integration, auto-generate standardized PRD.md",
   "author": "wikky",
   "license": "MIT",
   "type": "module",
   "private": true,
-  "keywords": [
-    "atomcode",
-    "skill",
-    "requirement-analysis",
-    "prd",
-    "system-overview",
-    "detailed-design",
-    "database-design",
-    "product-management"
-  ],
+  "keywords": ["atomcode", "skill", "requirement-analysis", "prd", "product-management"],
   "engines": {
     "atomcode": ">=1.0.0"
   },
@@ -32,31 +23,7 @@
   "atomcode": {
     "skill": true,
     "main": "SKILL.md",
-    "triggers": [
-      "需求分析",
-      "分析需求",
-      "整理需求",
-      "PRD",
-      "需求文档",
-      "需求梳理",
-      "梳理需求",
-      "系统概要说明书",
-      "详细说明书",
-      "数据库设计说明书"
-    ],
-    "formats": [
-      ".md",
-      ".docx",
-      ".xlsx",
-      ".xmind",
-      ".mm",
-      ".mmap"
-    ],
-    "docTypes": [
-      "prd",
-      "system-overview",
-      "detailed-design",
-      "database-design"
-    ]
+    "triggers": ["需求分析", "分析需求", "整理需求", "PRD", "需求文档", "需求梳理", "梳理需求"],
+    "formats": [".md", ".docx", ".xlsx", ".xmind", ".mm", ".mmap"]
   }
 }

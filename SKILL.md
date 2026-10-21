@@ -2,10 +2,10 @@
 name: requirement-analysis
 slug: pm-requirement-analysis
 displayName: requirement-analysis
-version: 1.3.0
-summary: 多格式需求文档分析与整合，内置 PRD、系统概要说明书、详细说明书、数据库设计说明书四类模板，支持分层提取、需求澄清与可视化原型
+version: 1.2.2
+summary: 多格式需求文档分析与整合，自动生成标准化 PRD.md，支持分层提取、需求澄清与可视化原型
 license: MIT
-description: "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的开发交付文档。内置 PRD、系统概要说明书、详细说明书、数据库设计说明书四类模板；大文件采用分层提取避免上下文溢出；支持用户指定子目录输出；支持完整版/业务摘要版 PRD。可选集成 pencil-designer 生成可视化原型。适用场景：用户有多个需求来源需要整合、需要从零梳理需求、需要将模糊想法转化为结构化 PRD、需要输出概要/详细/数据库设计说明书、需要可视化原型。触发词：需求分析、分析需求、整理需求、PRD、需求文档、需求梳理、梳理需求、系统概要说明书、详细说明书、数据库设计说明书、可视化原型、页面设计。"
+description: "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的 PRD.md 文档。大文件采用分层提取避免上下文溢出；支持用户指定子目录输出；支持完整版/业务摘要版模板。可选集成 pencil-designer 生成可视化原型。适用场景：用户有多个需求来源需要整合、需要从零梳理需求、需要将模糊想法转化为结构化 PRD、需要可视化原型。触发词：需求分析、分析需求、整理需求、PRD、需求文档、需求梳理、梳理需求、可视化原型、页面设计。"
 ---
 
 # 需求分析技能
@@ -32,7 +32,7 @@ graph TD
     T4 --> T5["T5: 需求澄清"]
     T5 -->|🔴问题未清零| T5
     T5 -->|🔴全部清零| T6["T6: 最终确认"]
-    T6 -->|🔴 CHECKPOINT| T7["T7: 生成交付文档 (PRD / 概要 / 详细 / 数据库设计)"]
+    T6 -->|🔴 CHECKPOINT| T7["T7: 生成 PRD.md"]
     T7 -->|🔴 CHECKPOINT| T8{"需要可视化原型?"}
     T8 -->|是| T8_Execute["T8: pencil-designer 原型设计"]
     T8 -->|否| END([完成])
@@ -48,11 +48,9 @@ graph TD
 | 工作区无 PRD.md，默认     | 标准模式 (standard)    | T0      |
 | 工作区无 PRD.md，用户选择快速 | 快速模式 (quick)       | T0      |
 | 工作区已有 PRD.md       | 增量模式 (incremental) | T0      |
-| 已有 PRD.md + 用户明确指定文档类型 | 直接生成交付文档 | T7 |
 
 ### 跳过规则
 
-- 已有 PRD.md 且用户只要派生文档（概要/详细/数据库设计）→ 跳过 T0-T6，直接进入 T7 复用已有功能清单
 - 无自然语言 → 跳过 T1.5；快速模式 → T5 批量确认；非增量 → 跳过 T6 变更展示；🔴 清零 → T5 提前结束；不生成原型 → 跳过 T8
 
 </workflow>
@@ -389,59 +387,57 @@ echo '{"features": [<整合后的功能列表>]}' | python scripts/invest_assess
 
 </task>
 
-> 📎 参考样例文件: `references/PRD模板.md`（PRD 模板）、`references/系统概要说明书模板.md`、`references/详细说明书模板.md`、`references/数据库设计说明书模板.md`、`references/数据字典示例.md`、`references/冲突标注示例.md`
+> 📎 参考样例文件: `references/PRD模板.md`（PRD 标准模板）、`references/数据字典示例.md`（数据字典格式）、`references/冲突标注示例.md`（冲突/待确认标注格式）
 
-<task name="生成交付文档">
+<task name="生成PRD">
 
-### Task 7: 生成交付文档
+### Task 7: 生成 PRD.md
 
 **分工**: [Script 执行]
 
-- [ ] Step 1: **选择输出路径** — 执行 `echo '{"cwd": "<工作区根目录>", "default": "PRD.md"}' | python scripts/suggest_output.py`，返回 `{recommended, reason, choices, doc_dirs, existing_prd}` 后向用户展示推荐理由与选项：
-- 检测到文档类子目录 → 推荐输出到该子目录；否则推荐工作区根目录
-- 用户可指定任意子目录（如 `docs/PRD.md`），增量模式沿用已有 PRD 路径
+- [ ] Step 1: **选择输出路径** — 调用 `scripts/suggest_output.py`，结合当前目录结构推荐输出位置：
 
-- [ ] Step 2: **选择交付文档类型** — 询问用户需要输出哪些文档（可多选）：
+```bash
+echo '{"cwd": "<工作区根目录>", "default": "PRD.md"}' | python scripts/suggest_output.py
+```
 
-| doc_type | 文档 | 默认文件名 | 适用场景 |
-|----------|------|------------|----------|
-| `prd` | 产品需求文档 | `PRD.md` | 需求评审、功能范围确认（默认） |
-| `system-overview` | 系统概要说明书 | `系统概要说明书.md` | 架构评审、项目立项 |
-| `detailed-design` | 详细说明书 | `详细说明书.md` | 开发编码、测试用例设计 |
-| `database-design` | 数据库设计说明书 | `数据库设计说明书.md` | 建表、数据访问层开发、DBA 评审 |
+返回 `{recommended, reason, choices, doc_dirs, existing_prd}`。向用户展示推荐理由与选项：
+- 默认推荐：检测到文档类子目录 → 输出到该子目录；否则输出到工作区根目录
+- 用户可指定任意子目录（如 `docs/PRD.md`、`output/需求/PRD.md`），支持增量模式沿用已有 PRD 所在路径
 
-  - 仅选择 `prd` 时，继续询问版本：`full`（完整版，默认）或 `summary`（业务摘要版）
-  - 选择多类文档时，按顺序逐份生成，共用同一份功能清单与冲突/待确认信息
+- [ ] Step 2: **选择输出模板** — 询问用户需要哪种版本：
+  - `full`（完整版）— 含字段说明/按钮逻辑/交互说明 + 附录 INVEST 质量评估（默认）
+  - `summary`（业务摘要版）— 删减数据字典等技术细节，仅保留业务视角的功能清单与验收标准
 
-- [ ] Step 3: 调用 `scripts/prd_generator.py`（`doc_type` 可用 `--doc-type` 指定）：
+- [ ] Step 3: 调用 `scripts/prd_generator.py`：
 
 ```bash
 echo '{
-  "project_name": "...", "version": "1.0.0", "mode": "standard|quick|incremental",
-  "doc_type": "prd|system-overview|detailed-design|database-design", "template": "full|summary",
-  "features": [...], "assessments": [...], "conflicts": [...], "pending_items": [...],
+  "features": [...],
+  "assessments": [...],
+  "conflicts": [...],
+  "mode": "standard|quick|incremental",
+  "template": "full|summary",
+  "version": "1.0.0",
+  "project_name": "<从需求推断或询问用户>",
+  "pending_items": [...],
   "nfr_baseline": [{"name": "并发量", "default": "日均 1000 UV", "trigger": "大促/高并发场景"}],
-  "need_feature_map": [{"need": "...", "feature": "...", "solution": "..."}],
-  "purpose": "...", "scope": "...", "background": "...", "goals": [...], "roles": [...],
-  "architecture": {"style": "...", "layers": [...], "components": [...], "tech_stack": [...], "deployment": "..."},
-  "interfaces": [{"name": "...", "type": "HTTP", "provider": "...", "caller": "...", "path": "..."}],
-  "entities": [{"name": "...", "table_name": "...", "fields": [...], "indexes": [...], "relations": [...]}],
-  "assumptions": [...], "constraints": [...], "database": "MySQL 8.0"
-}' | python scripts/prd_generator.py --doc-type "<Step 2 选择>" --output "<Step 1 选定路径>"
+  "need_feature_map": [{"need": "更快到达", "feature": "交通调度", "solution": "汽车/公共交通"}]
+}' | python scripts/prd_generator.py --output "<Step 1 选定路径>"
 ```
 
-> `entities` 缺省时按 `features[].fields` 推导表结构；`interfaces`/`architecture`/`roles` 缺失时输出"待补充"；未传 `--output` 时按 `doc_type` 使用默认文件名。
-> 📎 参考: `references/PRD模板.md`、`references/系统概要说明书模板.md`、`references/详细说明书模板.md`、`references/数据库设计说明书模板.md`、`references/数据字典示例.md`
+> 📎 参考: `references/PRD模板.md` — PRD 标准模板结构（含完整版/摘要版差异）
+> 📎 参考: `references/数据字典示例.md` — 数据字典格式
 
-- [ ] Step 4: **增量模式特殊处理**: 保留未变更内容；新增功能追加到对应模块；变更功能原位更新并标注 `> 🔄 本次变更`；版本号递增（v1.0.0 → v1.1.0），派生文档与 PRD 版本保持一致
+- [ ] Step 4: **增量模式特殊处理**:
+  - 保留已有 PRD 中未变更内容
+  - 新增功能追加到对应模块
+  - 变更功能在原位更新并标注 `> 🔄 本次变更`
+  - 版本号递增（v1.0.0 → v1.1.0）
 
-**各文档必需章节**:
-- `prd`: 需求概述 → 功能清单 → 附录（变更历史 + 待确认事项；完整版含 INVEST 质量评估）
-- `system-overview`: 引言 → 系统概述 → 总体设计 → 功能概要 → 接口概要 → 数据概要 → 非功能需求 → 约束与假设 → 附录
-- `detailed-design`: 引言 → 总体说明 → 模块详细设计 → 功能明细 → 接口详细设计 → 数据设计 → 日志/异常/安全 → 附录
-- `database-design`: 引言 → 设计概述 → 逻辑数据模型 → 物理表设计 → 数据字典 → 索引与约束 → 初始化与迁移 → 安全与权限 → 附录
+**PRD 必需章节**: 需求概述 → 功能清单 → 附录（变更历史 + 待确认事项；完整版含 INVEST 质量评估）
 
-**输出**: 用户选定路径下的交付文档（PRD.md / 系统概要说明书.md / 详细说明书.md / 数据库设计说明书.md，可多份）
+**输出**: 用户选定路径下的 `PRD.md`（完整版或业务摘要版）
 
 </task>
 
@@ -451,32 +447,44 @@ echo '{
 
 **分工**: [LLM→Script] — LLM 决策是否启动，调用 pencil-designer skill 执行
 
-> **触发条件**: PRD 确认后用户提出原型需求，或 PRD 中标记需原型设计的模块。环境探测/后端选择/CLI-MCP 命令由 pencil-designer 自行处理，本 Task 只做引导。
+> **触发条件**: 用户在 PRD 确认后提出可视化原型需求，或 PRD.md 中标记了需要原型设计的模块。
+> **依赖**: 本 Task 依赖 Task 7 输出的 PRD.md。
+> **环境检查说明**: pen.dev 环境探测、后端选择、CLI/MCP 命令等细节由 pencil-designer skill 自行处理，本 skill 只做简单引导，不重复执行。
 
 #### 8.1 是否需要原型设计？
 
-- [ ] Step 1: 展示 PRD 摘要并询问
+- [ ] Step 1: 展示 PRD.md 摘要，询问用户是否需要生成可视化原型
 
 ```
-📊 PRD 已生成，检测到模块：[模块1]（N 项）...
-是否需要生成可视化原型？
+📊 PRD 已生成，检测到以下模块：[模块1]（N 项）、[模块2]（M 项）...
+是否需要基于此 PRD 生成可视化原型？
 1. ✅ 是，使用 pencil-designer 生成原型
-2. 📝 先修改 PRD 再生成
+2. 📝 我需要先修改 PRD 再生成
 3. ⏸ 暂不生成，仅输出 PRD.md
 ```
 
-- [ ] 🔴 **CHECKPOINT**: 用户选择"否"则跳过本 Task
+- [ ] 🔴 **CHECKPOINT**: 用户选择"否"则跳过本 Task，流程结束
 
-#### 8.2 调用与完成检查点
+#### 8.2 简单引导调用 pencil-designer
 
-- 用户选"✅ 是"：将 **PRD.md 路径** 与 **原始需求** 透传 pencil-designer，说明"基于此 PRD 生成可视化原型"
-- 用户选"📝"：修改 PRD 后重新进入本 Task；用户选"⏸"：暂停并保存进度
+用户选择"✅ 是"时，只做以下引导，其余交给 pencil-designer：
 
-**输出**: `design.pen` + 可交互原型 `design-prototype.html`
+- [ ] Step 1: 将 **PRD.md 路径** 与 **用户原始需求** 透传给 pencil-designer skill，明确说明"基于此 PRD 生成可视化原型"
+- [ ] Step 2: 不重复执行环境探测 / 后端选择 / CLI-MCP 命令，交由 pencil-designer 按自身流程处理
+
+**输出**: 由 pencil-designer 生成的 `design.pen` 原型文件 + 可交互原型
+
+#### 8.3 完成检查点
 
 ```
-✅ 原型生成完成！A. 确认完成  B. 修改设计（反馈传入 pencil-designer）  C. 暂停保存
+✅ 原型生成完成！原型文件: design.pen | 可交互原型: design-prototype.html
+A. ✅ 确认完成，流程结束  B. 📝 需要修改设计（反馈传入 pencil-designer 迭代）  C. ⏸ 暂停，保存进度
 ```
+
+**执行规则**:
+- 用户选择 A → 流程结束
+- 用户选择 B → 将修改意见传入 pencil-designer，迭代修改 design.pen
+- 用户选择 C → 暂停，保存进度
 
 </task>
 
@@ -498,4 +506,4 @@ echo '{
 
 ## 注意事项
 
-1. 文档用 UTF-8；2. 冲突需用户最终确认，技能不自动解决；3. 🔴 严重矛盾解决前不得生成 PRD；4. 增量模式依赖 PRD.md 格式一致性；5. 多份交付文档必须共用同一份功能清单与编号，避免口径不一致。
+1. 文档用 UTF-8；2. 冲突需用户最终确认，技能不自动解决；3. 🔴 严重矛盾解决前不得生成 PRD；4. 增量模式依赖 PRD.md 格式一致性

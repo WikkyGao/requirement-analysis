@@ -2,10 +2,10 @@
 name: requirement-analysis
 slug: pm-requirement-analysis
 displayName: requirement-analysis
-version: 1.3.2
-summary: 多格式需求文档分析与整合，自动生成标准化 PRD.md，支持分层提取、需求澄清与可视化原型（可选 .pen 或仅 HTML）
+version: 2.0.0
+summary: 多格式需求文档分析与整合，自动生成标准化 PRD.md，支持分层提取、需求澄清与可视化原型（可选原生设计文件或仅 HTML）
 license: MIT
-description: "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的 PRD.md 文档。大文件采用分层提取避免上下文溢出；支持用户指定子目录输出；支持完整版/业务摘要版模板。可选集成 pencil-designer 生成可视化原型。适用场景：用户有多个需求来源需要整合、需要从零梳理需求、需要将模糊想法转化为结构化 PRD、需要可视化原型。触发词：需求分析、分析需求、整理需求、PRD、需求文档、需求梳理、梳理需求、可视化原型、页面设计。"
+description: "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的 PRD.md 文档。大文件采用分层提取避免上下文溢出；支持用户指定子目录输出；支持完整版/业务摘要版模板。可选集成 prototype-designer 生成原生或 HTML 原型；T8 只决定产出形态，不选择具体设计工具。适用场景：用户有多个需求来源需要整合、需要从零梳理需求、需要将模糊想法转化为结构化 PRD、需要可视化原型。触发词：需求分析、分析需求、整理需求、PRD、需求文档、需求梳理、梳理需求、可视化原型、页面设计。"
 ---
 
 # 需求分析技能
@@ -35,10 +35,10 @@ graph TD
     T6 -->|🔴 CHECKPOINT| T7["T7: 生成 PRD.md"]
     T7 -->|🔴 CHECKPOINT| T8{"需要可视化原型?"}
     T8 -->|否| END([完成])
-    T8 -->|是| T8_Form{"是否生成 .pen 文件?"}
-    T8_Form -->|是| T8_Pen["T8: 生成 design.pen + 可交互 HTML"]
-    T8_Form -->|否| T8_Html["T8: 直接生成可交互 HTML 原型"]
-    T8_Pen --> END
+    T8 -->|是| T8_Form{"选择产出形态?"}
+    T8_Form -->|原生设计文件| T8_Native["T8: 交给 prototype-designer 选择原生工具"]
+    T8_Form -->|仅 HTML| T8_Html["T8: 生成可交互 HTML 原型"]
+    T8_Native --> END
     T8_Html --> END
 ```
 
@@ -67,7 +67,7 @@ graph TD
 - **需求/功能/方案 分层甄别**: 对每条输入（含文档内容）先区分"需求 / 功能 / 方案"，用户提供的往往是"方案"而非真实"需求"，需上钻到需求后再提取，防止方案绑架需求
 - **所有脚本通过 stdin JSON 接收、stdout JSON 输出**
 - **脚本禁止使用关键词/正则匹配解析用户自然语言输入**
-- **pencil-designer 原型设计为可选流程**: 用户明确选择后才执行，不阻塞主 PRD 生成流程；生成 .pen 与否**必须**先询问用户，**不得**默认生成 .pen
+- **prototype-designer 原型设计为可选流程**: 用户明确选择后才执行，不阻塞主 PRD 生成流程；生成原生设计文件还是仅 HTML **必须**先询问用户，**不得**默认生成原生文件；具体原生工具由 prototype-designer 询问，T8 不选工具
 </constraint>
 
 ---
@@ -259,7 +259,7 @@ echo '{"mode":"merge","chunks":[<各批 features>]}' | python scripts/chunked_ex
 **输出**: 统一中间格式 JSON 数组 `[{id, name, description, module, priority, fields, actions, screenshots, related_pages, source}]`
 
 > **截图字段（可选）**: 若用户提供了界面截图/原型图，或在澄清过程中补充了现状截图，为对应功能项附加 `screenshots: [{path, caption, description}]`。`path` 使用相对 PRD 的路径（建议存放在 `screenshots/` 目录），生成 PRD 时在每个功能下渲染为「截图」小节。
-> **相关页面字段（可选）**: 若已有原型页面截图（如 pencil-designer 产出），为对应功能项附加 `related_pages: [{name, path, caption, description}]`（建议存放在 `prototype/` 目录），生成 PRD 时在每个功能下渲染为「相关页面」小节。
+> **相关页面字段（可选）**: 若已有原型页面截图（如 prototype-designer 产出），为对应功能项附加 `related_pages: [{name, path, caption, description}]`（建议存放在 `prototype/` 目录），生成 PRD 时在每个功能下渲染为「相关页面」小节。
 
 - [ ] Step 3: [LLM 决策] **信息补充** — 必需字段缺失时从高优先级文档补充，仍缺失标记"待补充"
 
@@ -448,41 +448,51 @@ echo '{
 
 ### Task 8: 可视化原型设计（可选）
 
-**分工**: [LLM→Script] — LLM 决策是否启动，调用 pencil-designer skill 执行
+**分工**: [LLM→Script] — LLM 决策是否启动，调用 prototype-designer skill 执行
 
 > **触发条件**: PRD 确认后用户提出原型需求，或 PRD.md 标记了需原型设计的模块；本 Task 依赖 Task 7 的 PRD.md。
-> **环境检查说明**: 环境探测与 CLI/MCP 命令由 pencil-designer 自行处理；选择「仅 HTML」时跳过环境校验，但仍执行 PRD、设计规范与 HTML 组件库流程。
+> **环境检查说明**: 环境探测与 CLI/MCP 命令由 prototype-designer 自行处理；选择「仅 HTML」时跳过环境校验，但仍执行 PRD、设计规范与 HTML 组件库流程。
 
 #### 8.1 是否需要原型设计？
 
 - [ ] Step 1: 展示 PRD.md 摘要并询问：`📊 已检测模块：[模块1]（N 项）... 是否生成可视化原型？1. ✅ 是 2. 📝 先改 PRD 3. ⏸ 暂不生成`
 - [ ] 🔴 **CHECKPOINT**: 选 1 → 进入 8.2；选 2 → 回 Task 7；选 3 → 跳过本 Task
 
-#### 8.2 选择原型形式（必须先询问，不得默认生成 .pen）
+#### 8.2 选择产出形态（必须先询问，不得默认原生）
 
 ```
-🎨 请选择原型形式：
-1. 🖼 .pen 文件 + 可交互 HTML（可继续在 pencil 编辑图层）
-2. 🌐 仅可交互 HTML（不生成 .pen，跳过 pencil 环境校验）
+🎨 请选择产出形态：
+1. 🧩 原生设计文件 + 可交互 HTML（具体工具由 prototype-designer 询问）
+2. 🌐 仅可交互 HTML（不生成原生文件，跳过原生工具环境校验）
 ```
 
 - [ ] 🔴 **CHECKPOINT**: 用户选定 1/2 后才可进入 8.3
-- **1️⃣ .pen + HTML**: 按 pencil-designer 完整流程，产出 `design.pen` + `design-prototype.html`
-- **2️⃣ 仅 HTML**: 使用「仅 HTML 模式」，跳过 `.pen` 与 CLI/MCP 环境校验，但**必须**执行 PRD 检查、设计规范检查（`UI Design.html`）与组件库管理（`component-library.html` + `components.json`），产出 `design-prototype.html`
+- **1️⃣ 原生设计文件 + HTML**: 交给 `prototype-designer`，由其按适配器状态询问可用原生工具，并产出对应原生文件 + `design-prototype.html`
+- **2️⃣ 仅 HTML**: 使用「仅 HTML 模式」，跳过原生工具与 CLI/MCP 环境校验，但**必须**执行 PRD 检查、设计规范检查（`UI Design.html`）与组件库管理（`component-library.html` + `components.json`），产出 `design-prototype.html`
 
-#### 8.3 简单引导调用 pencil-designer
+#### 8.3 构造 DesignRequest 并调用 prototype-designer
 
-- [ ] Step 1: 透传 **PRD.md 路径**、**用户原始需求**、**8.2 选定的原型形式**；环境探测、后端选择、CLI-MCP 命令交由 pencil-designer，本 skill 不重复执行
-- [ ] Step 2: 选择 2️⃣ 时明确说明"仅 HTML 模式：不生成 .pen、不检查 pencil 环境，但仍走 PRD / 设计规范 / HTML 组件库流程"；输出：1️⃣ → `design.pen` + `design-prototype.html`，2️⃣ → 仅 `design-prototype.html`
+- [ ] Step 1: 至少透传以下字段：
+  - `prdPath`: PRD.md 绝对路径
+  - `projectRoot`: 项目根目录
+  - `projectName`: 项目名
+  - `output`: `native`（原生）或 `html`（仅 HTML）
+  - `html`: `true`
+  - `outputDir`: 原型输出目录
+  - `userRequest`: 用户原始需求
+- [ ] Step 2: `output=native` 时 **`adapter` 留空**，由 `prototype-designer` 询问并选择可用原生工具；本 skill 不指定、不暗示具体工具
+- [ ] Step 3: 环境探测、适配器 preflight、CLI/MCP 命令交由 `prototype-designer`，本 skill 不重复执行
+- [ ] Step 4: 若 `prototype-designer` 返回 `blocked` / `partial`，按其 `nextActions` 提供「仅 HTML」或停止，**不得静默换工具**
+- [ ] Step 5: 选择 2️⃣ 时明确说明「仅 HTML：不生成原生文件、不检查原生工具环境，但仍走 PRD / 设计规范 / HTML 组件库流程」
 
 #### 8.4 完成检查点
 
 ```
-✅ 原型生成完成！{1️⃣: design.pen + design-prototype.html | 2️⃣: design-prototype.html（无 .pen）}
+✅ 原型生成完成！{1️⃣: 原生文件（.pen / .rp，以实际适配器为准）+ design-prototype.html | 2️⃣: design-prototype.html（无原生文件）}
 A. ✅ 确认完成  B. 📝 需要修改设计  C. ⏸ 暂停，保存进度
 ```
 
-**执行规则**: A → 流程结束；B → 按 8.2 已选形式迭代（2️⃣ 仍不生成 .pen）；C → 暂停保存
+**执行规则**: A → 流程结束；B → 按 8.2 已选形态迭代（2️⃣ 仍不生成原生文件）；C → 暂停保存
 
 </task>
 

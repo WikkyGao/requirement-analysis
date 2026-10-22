@@ -12,6 +12,11 @@
   {
     "id": 3,
     "prompt": "分析需求后，我想基于生成的PRD.md直接做一个可视化的页面原型，请帮我完成。",
-    "expected": "技能应先生成PRD.md，询问是否需要可视化原型；用户确认后先询问是否生成.pen文件。选择仅HTML时跳过.pen与环境校验，但仍执行PRD检查、设计规范检查与HTML组件库管理，最后产出可交互HTML原型"
+    "expected": "技能应先生成 PRD.md，询问是否需要可视化原型；确认后询问产出形态（原生设计文件 + HTML 或仅 HTML），不得直接询问是否生成 .pen。选择仅 HTML 时跳过原生工具环境校验，但执行 PRD、设计规范与 HTML 组件库流程；选择原生时把 adapter 留空交给 prototype-designer，由后者按适配器状态询问可用原生工具"
+  },
+  {
+    "id": 4,
+    "prompt": "PRD 确认后，我想用 OpenDesign 生成原生原型。",
+    "expected": "T8 只确认产出形态为原生，将 adapter 留空交给 prototype-designer；prototype-designer 发现 OpenDesign 为 planned，返回 blocked 并提供仅 HTML 或停止，不自造命令、不静默换 Pen/Axure"
   }
 ]

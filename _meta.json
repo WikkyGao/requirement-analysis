@@ -1,8 +1,8 @@
 {
   "name": "requirement-analysis",
   "display_name": "需求分析技能",
-  "version": "1.3.2",
-  "description": "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的 PRD.md 文档。",
+  "version": "2.0.0",
+  "description": "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的 PRD.md 文档。可选集成 prototype-designer：T8 只决定原生设计文件或仅 HTML，具体设计工具由 prototype-designer 询问。",
   "description_en": "Multi-format requirement document analysis and integration. Automatically parse Markdown, Excel, Word, and mind map files, intelligently deduplicate and supplement requirement info, and generate standardized PRD.md documents.",
   "author": {
     "name": "wikky",
@@ -30,7 +30,9 @@
     "PRD",
     "需求文档",
     "需求梳理",
-    "梳理需求"
+    "梳理需求",
+    "可视化原型",
+    "页面设计"
   ],
   "platform": "atomcode",
   "min_agent_version": "1.0.0",
@@ -102,15 +104,28 @@
     "来源追溯",
     "增量更新",
     "快速模式",
-    "飞书/Git/FTP/Obsidian/剪贴板多目标推送"
+    "飞书/Git/FTP/Obsidian/剪贴板多目标推送",
+    "可视化原型（原生 / 仅 HTML，工具由 prototype-designer 选择）"
   ],
   "changelog": [
+    {
+      "version": "2.0.0",
+      "date": "2026-10-22",
+      "changes": [
+        "T8 改为只询问「原生设计文件 + HTML」或「仅 HTML」，不再询问是否生成 .pen，也不选择具体工具",
+        "原生路径将 adapter 留空并交给 prototype-designer，由其询问 Pen / Axure / OpenDesign",
+        "仅 HTML 路径继续跳过原生工具环境校验，但保留 PRD、设计规范与 HTML 组件库流程",
+        "透传字段明确为 prdPath、projectRoot、projectName、output、html、outputDir、userRequest",
+        "适配 OpenDesign planned：上游收到 blocked/partial 时只提供仅 HTML 或停止，不静默换工具",
+        "同步流程图、Task 8、版本与测试用例至 2.0.0"
+      ]
+    },
     {
       "version": "1.3.2",
       "date": "2026-10-22",
       "changes": [
         "T8 新增原型形式选择：先由用户决定是否生成 .pen 文件",
-        "T8 选择仅 HTML 时跳过 .pen 与 pencil CLI/MCP 环境校验，直接由 pencil-designer 产出可交互 HTML 原型",
+        "T8 选择仅 HTML 时跳过 .pen 与 pencil CLI/MCP 环境校验，直接由 prototype-designer 产出可交互 HTML 原型",
         "仅 HTML 模式仍要求 PRD 检查、设计规范检查与 HTML 组件库（component-library.html）管理",
         "同步更新流程图与触发测试用例",
         "在 1.3.1 回滚基础上发布 1.3.2，纳入 Task 8 仅 HTML 原型模式"
@@ -138,7 +153,7 @@
         "T7 支持用户指定输出子目录并基于目录结构推荐",
         "T7 支持完整版/业务摘要版两种输出模板",
         "T7 附录新增需求→功能→方案映射",
-        "T8 简化为仅做简单引导，环境检查移交 pencil-designer"
+        "T8 简化为仅做简单引导，环境检查移交 prototype-designer"
       ]
     },
     {
@@ -155,8 +170,8 @@
       "version": "1.1.0",
       "date": "2026-09-01",
       "changes": [
-        "新增可选 pencil-designer 可视化原型流程（T8）",
-        "新增 pencil-designer 协作约束"
+        "新增可选 prototype-designer 可视化原型流程（T8）",
+        "新增 prototype-designer 协作约束"
       ]
     }
   ]

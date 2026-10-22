@@ -2,7 +2,7 @@
 
 [![skills.sh](https://skills.sh/b/WikkyGao/requirement-analysis)](https://skills.sh/WikkyGao/requirement-analysis)
 
-> **版本**: v1.2.2 | **许可**: MIT
+> **版本**: v2.0.0 | **许可**: MIT
 
 ## 简介
 
@@ -57,6 +57,18 @@ pip install python-docx openpyxl    # 增强 Word/Excel 解析
 文档扫描 → 文档解析 → 功能提取 → 智能整合(含质量评估) → 需求澄清 → 用户确认 → 生成 PRD
 ```
 
+
+## 可视化原型（可选）
+
+T8 只做两步选择：
+
+1. 是否需要可视化原型。
+2. 产出形态：**原生设计文件 + 可交互 HTML**，或**仅可交互 HTML**。
+
+若选择原生，T8 只把 `output=native`、`adapter=null` 与 PRD 上下文交给 `prototype-designer`；具体用 Pen、Axure 还是 OpenDesign，由 `prototype-designer` 询问。OpenDesign 当前为 `planned`，上游收到 `blocked` 时只提供「仅 HTML」或停止，不静默换工具。
+
+仅 HTML 路径跳过原生工具与 CLI/MCP 环境校验，但仍执行 PRD、设计规范（`UI Design.html`）与 HTML 组件库（`component-library.html` + `components.json`）流程。
+
 ## 核心特性
 
 - **语义去重**: AI 语义理解识别重复功能，合并冗余信息
@@ -65,6 +77,7 @@ pip install python-docx openpyxl    # 增强 Word/Excel 解析
 - **来源追溯**: 每项功能标注来源文档
 - **增量更新**: 检测已有 PRD.md 自动进入增量模式
 - **快速模式**: 跳过逐条提问，自动填充合理默认值
+- **原型路由**: T8 只决定原生/仅 HTML，具体设计工具交给 `prototype-designer`
 
 ## 输出结构
 

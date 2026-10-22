@@ -1,7 +1,7 @@
 {
   "name": "requirement-analysis",
   "display_name": "需求分析技能",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "多格式需求文档分析与整合。自动解析 Markdown、Excel、Word、思维导图文件，智能去重和补充需求信息，生成标准化的 PRD.md 文档。",
   "description_en": "Multi-format requirement document analysis and integration. Automatically parse Markdown, Excel, Word, and mind map files, intelligently deduplicate and supplement requirement info, and generate standardized PRD.md documents.",
   "author": {
@@ -49,6 +49,11 @@
     "飞书/Git/FTP/Obsidian/剪贴板多目标推送"
   ],
   "changelog": [
+    {
+      "version": "1.2.3",
+      "date": "2026-10-22",
+      "changes": ["T8 新增原型形式选择：先由用户决定是否生成 .pen 文件", "T8 选择仅 HTML 时跳过 .pen 与 pencil CLI/MCP 环境校验，直接由 pencil-designer 产出可交互 HTML 原型", "仅 HTML 模式仍要求 PRD 检查、设计规范检查与 HTML 组件库（component-library.html）管理", "同步更新流程图与触发测试用例"]
+    },
     {
   "version": "1.2.2",
       "date": "2026-09-20",
